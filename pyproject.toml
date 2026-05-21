@@ -1,13 +1,31 @@
 [project]
 name = "caddyconfig"
-version = "0.1.0"
+version = "0.1.1"
 description = "Caddy JSON configuration manipulation (Pydantic v2 + fluent builder)"
 readme = "README.md"
-license = {text = "Apache 2.0"}
+license = "Apache-2.0"
 requires-python = ">=3.10"
 dependencies = [
     "pydantic>=2.0",
 ]
+# Classifier list: https://pypi.org/classifiers/
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Pydantic :: 2",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: File Formats :: JSON",
+    "Topic :: Internet :: Proxy Servers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/thewiw/pycaddyconfig"
+Documentation = "https://github.com/thewiw/pycaddyconfig/blob/master/README.md"
+Repository = "https://github.com/thewiw/pycaddyconfig.git"
+Issues = "https://github.com/thewiw/pycaddyconfig/issues"
+#Changelog = "https://github.com/thewiw/pycaddyconfig/blob/master/CHANGELOG.md"
 
 [dependency-groups]
 dev = [
