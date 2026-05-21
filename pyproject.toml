@@ -1,0 +1,20 @@
+[project]
+name = "caddyconfig"
+version = "0.1.0"
+description = "Caddy JSON configuration manipulation (Pydantic v2 + fluent builder)"
+readme = "README.md"
+license = {text = "Apache 2.0"}
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=7.1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
