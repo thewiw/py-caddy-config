@@ -1,6 +1,6 @@
 [project]
 name = "caddyconfig"
-version = "0.1.1"
+version = "0.1.2"
 description = "Caddy JSON configuration manipulation (Pydantic v2 + fluent builder)"
 readme = "README.md"
 license = "Apache-2.0"
@@ -21,11 +21,11 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/thewiw/pycaddyconfig"
-Documentation = "https://github.com/thewiw/pycaddyconfig/blob/master/README.md"
-Repository = "https://github.com/thewiw/pycaddyconfig.git"
-Issues = "https://github.com/thewiw/pycaddyconfig/issues"
-#Changelog = "https://github.com/thewiw/pycaddyconfig/blob/master/CHANGELOG.md"
+Homepage = "https://github.com/thewiw/py-caddy-config"
+Documentation = "https://github.com/thewiw/py-caddy-config/blob/master/README.md"
+Repository = "https://github.com/thewiw/py-caddy-config.git"
+Issues = "https://github.com/thewiw/py-caddy-config/issues"
+#Changelog = "https://github.com/thewiw/py-caddy-config/blob/master/CHANGELOG.md"
 
 [dependency-groups]
 dev = [
