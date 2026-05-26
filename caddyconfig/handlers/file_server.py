@@ -58,11 +58,16 @@ class FileServerHandler(HandlerBase):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "FileServerHandler":
+        browse_val = data.get("browse")
+        if isinstance(browse_val, dict):
+            browse = True
+        else:
+            browse = bool(browse_val) if browse_val is not None else False
         return cls(
             root=data.get("root"),
             hide=list(data.get("hide", [])),
             index_names=list(data.get("index_names", [])),
-            browse="browse" in data,
+            browse=browse,
             canonical_uris=data.get("canonical_uris"),
             pass_thru=data.get("pass_thru", False),
         )

@@ -204,7 +204,7 @@ class TestHttpBasicCredential:
         c = HttpBasicCredential(username="alice", password="$2a$hash")
         d = c.to_dict()
         assert d["username"] == "alice"
-        assert d["algorithm"] == {"algorithm": "bcrypt"}
+        assert d["algorithm"] == "bcrypt"
 
     def test_empty_username_raises(self):
         with pytest.raises(ValidationError, match="not be empty"):
@@ -220,7 +220,7 @@ class TestHttpBasicCredential:
 
     def test_algorithm_scrypt(self):
         c = HttpBasicCredential(username="u", password="p", algorithm="scrypt")
-        assert c.to_dict()["algorithm"] == {"algorithm": "scrypt"}
+        assert c.to_dict()["algorithm"] == "scrypt"
 
     def test_invalid_algorithm_raises(self):
         with pytest.raises(ValidationError):

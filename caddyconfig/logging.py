@@ -31,7 +31,8 @@ class LogSink(CaddyModel):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "LogSink":
-        writer = data.get("writer", {}).get("output", "stderr")
+        writer_data = data.get("writer")
+        writer = writer_data.get("output", "stderr") if isinstance(writer_data, dict) else "stderr"
         return cls(writer=writer)
 
 
@@ -111,9 +112,11 @@ class Logging(CaddyModel):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Logging":  # type: ignore[override]
-        sink = LogSink.from_dict(data["sink"]) if "sink" in data else None
+        sink_data = data.get("sink")
+        sink = LogSink.from_dict(sink_data) if isinstance(sink_data, dict) else None
+        logs_data = data.get("logs") or {}
         logs = {
             name: LogEntry.from_dict(name, entry)
-            for name, entry in data.get("logs", {}).items()
+            for name, entry in logs_data.items()
         }
         return cls(sink=sink, logs=logs)

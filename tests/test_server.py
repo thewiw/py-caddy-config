@@ -247,8 +247,8 @@ class TestServer:
         s = Server(name="main", metrics=Metrics(per_host=True))
         assert s.to_dict()["metrics"] == {"per_host": True}
 
-    def test_metrics_false_omitted(self):
-        assert "metrics" not in Server(name="main", metrics=Metrics(per_host=False)).to_dict()
+    def test_metrics_false_preserved(self):
+        assert Server(name="main", metrics=Metrics(per_host=False)).to_dict()["metrics"] == {}
 
     def test_metrics_none_omitted(self):
         assert "metrics" not in Server(name="main").to_dict()

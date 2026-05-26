@@ -38,9 +38,7 @@ class Apps(CaddyModel):
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {}
         if self.http is not None:
-            http_d = self.http.to_dict()
-            if http_d:
-                d["http"] = http_d
+            d["http"] = self.http.to_dict()
         return d
 
     @classmethod

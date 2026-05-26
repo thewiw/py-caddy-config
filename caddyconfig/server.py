@@ -158,14 +158,13 @@ class Server(CaddyModel):
         if self.errors:
             d["errors"] = [r.to_dict() for r in self.errors]
         if self.metrics is not None:
-            metrics_d = self.metrics.to_dict()
-            if metrics_d:
-                d["metrics"] = metrics_d
+            d["metrics"] = self.metrics.to_dict()
         return d
 
     @classmethod
     def from_dict(cls, name: str, data: dict[str, Any]) -> "Server":  # type: ignore[override]
-        metrics = Metrics.from_dict(data["metrics"]) if "metrics" in data else None
+        metrics_data = data.get("metrics")
+        metrics = Metrics.from_dict(metrics_data) if isinstance(metrics_data, dict) else None
         return cls(
             name=name,
             listen=list(data.get("listen", [])),
@@ -218,9 +217,10 @@ class HttpApp(CaddyModel):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "HttpApp":  # type: ignore[override]
+        servers_data = data.get("servers") or {}
         servers = {
             name: Server.from_dict(name, srv)
-            for name, srv in data.get("servers", {}).items()
+            for name, srv in servers_data.items()
         }
         return cls(
             servers=servers,

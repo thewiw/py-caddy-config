@@ -124,13 +124,16 @@ class MatchCriteria(CaddyModel):
         if self.header_regexp is not None:
             d["header_regexp"] = dict(self.header_regexp)
         if self.not_:
-            d["not"] = [m.to_dict() for m in self.not_]
+            # Use the serialization_alias from the Field definition
+            alias = self.__class__.model_fields["not_"].serialization_alias or "not"
+            d[alias] = [m.to_dict() for m in self.not_]
         return d
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "MatchCriteria":
         # Remap "not" → "not_" for Pydantic
         payload = dict(data)
-        if "not" in payload:
-            payload["not_"] = [cls.from_dict(m) for m in payload.pop("not")]
+        not_data = payload.pop("not", None)
+        if not_data is not None:
+            payload["not_"] = [cls.from_dict(m) for m in not_data]
         return cls.model_validate(payload)

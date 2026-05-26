@@ -37,7 +37,7 @@ class RawHandler(HandlerBase):
         return cls.model_validate(data)
 
     def to_dict(self) -> dict[str, Any]:
-        return self.model_dump(mode="json", by_alias=True)
+        return self.model_dump(mode="json", by_alias=True, exclude_none=True)
 
 
 def handler_from_dict(data: dict[str, Any]) -> HandlerBase:

@@ -40,13 +40,13 @@ class HttpBasicCredential(CaddyModel):
         return {
             "username": self.username,
             "password": self.password,
-            "algorithm": {"algorithm": self.algorithm},
+            "algorithm": self.algorithm,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "HttpBasicCredential":
-        algo = data.get("algorithm", {})
-        algorithm = algo.get("algorithm", "bcrypt") if isinstance(algo, dict) else "bcrypt"
+        algo = data.get("algorithm", "bcrypt")
+        algorithm = algo if isinstance(algo, str) else "bcrypt"
         return cls(
             username=data["username"],
             password=data["password"],
@@ -105,12 +105,19 @@ class AuthenticationHandler(HandlerBase):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "AuthenticationHandler":
-        http_basic = data.get("providers", {}).get("http_basic", {})
+        providers = data.get("providers")
+        http_basic = providers.get("http_basic") if isinstance(providers, dict) else {}
+        http_basic = http_basic or {}
+        hash_cache_val = http_basic.get("hash_cache")
+        if isinstance(hash_cache_val, dict):
+            hash_cache = True
+        else:
+            hash_cache = bool(hash_cache_val) if hash_cache_val is not None else False
         return cls(
             realm=http_basic.get("realm", ""),
             credentials=[
                 HttpBasicCredential.from_dict(c)
                 for c in http_basic.get("accounts", [])
             ],
-            hash_cache="hash_cache" in http_basic,
+            hash_cache=hash_cache,
         )

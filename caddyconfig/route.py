@@ -110,7 +110,7 @@ class Route(CaddyModel):
     def from_dict(cls, data: dict[str, Any]) -> "Route":
         return cls(
             group=data.get("group"),
-            match=[MatchCriteria.from_dict(m) for m in data.get("match", [])],
-            handle=[handler_from_dict(h) for h in data.get("handle", [])],
+            match=[MatchCriteria.from_dict(m) for m in (data.get("match") or [])],
+            handle=[handler_from_dict(h) for h in (data.get("handle") or [])],
             terminal=data.get("terminal", False),
         )

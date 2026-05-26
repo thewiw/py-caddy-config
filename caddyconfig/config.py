@@ -41,24 +41,21 @@ class CaddyConfig(CaddyModel):
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {}
         if self.admin is not None:
-            admin_d = self.admin.to_dict()
-            if admin_d:
-                d["admin"] = admin_d
+            d["admin"] = self.admin.to_dict()
         if self.logging is not None:
-            logging_d = self.logging.to_dict()
-            if logging_d:
-                d["logging"] = logging_d
+            d["logging"] = self.logging.to_dict()
         if self.apps is not None:
-            apps_d = self.apps.to_dict()
-            if apps_d:
-                d["apps"] = apps_d
+            d["apps"] = self.apps.to_dict()
         return d
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "CaddyConfig":  # type: ignore[override]
-        admin = Admin.from_dict(data["admin"]) if "admin" in data else None
-        logging = Logging.from_dict(data["logging"]) if "logging" in data else None
-        apps = Apps.from_dict(data["apps"]) if "apps" in data else None
+        admin_data = data.get("admin")
+        admin = Admin.from_dict(admin_data) if isinstance(admin_data, dict) else None
+        logging_data = data.get("logging")
+        logging = Logging.from_dict(logging_data) if isinstance(logging_data, dict) else None
+        apps_data = data.get("apps")
+        apps = Apps.from_dict(apps_data) if isinstance(apps_data, dict) else None
         return cls(admin=admin, logging=logging, apps=apps)
 
     def to_json(self, indent: int = 2) -> str:
