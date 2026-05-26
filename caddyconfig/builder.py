@@ -136,8 +136,19 @@ class RouteBuilder:
         *upstreams: str,
         headers: Optional[dict[str, Any]] = None,
         transport: Optional[dict[str, Any]] = None,
+        circuit_breaker: Optional[dict[str, Any]] = None,
         health_checks: Optional[dict[str, Any]] = None,
         load_balancing: Optional[dict[str, Any]] = None,
+        rewrite: Optional[dict[str, Any]] = None,
+        handle_response: Optional[list[dict[str, Any]]] = None,
+        flush_interval: Optional[int] = None,
+        trusted_proxies: Optional[list[str]] = None,
+        request_buffers: Optional[int] = None,
+        response_buffers: Optional[int] = None,
+        stream_timeout: Optional[int] = None,
+        stream_close_delay: Optional[int] = None,
+        dynamic_upstreams: Optional[dict[str, Any]] = None,
+        verbose_logs: bool = False,
     ) -> "RouteBuilder":
         """
         Add a ``reverse_proxy`` handler.
@@ -152,8 +163,19 @@ class RouteBuilder:
                 upstreams=list(upstreams),
                 headers=headers,
                 transport=transport,
+                circuit_breaker=circuit_breaker,
                 health_checks=health_checks,
                 load_balancing=load_balancing,
+                rewrite=rewrite,
+                handle_response=handle_response,
+                flush_interval=flush_interval,
+                trusted_proxies=trusted_proxies,
+                request_buffers=request_buffers,
+                response_buffers=response_buffers,
+                stream_timeout=stream_timeout,
+                stream_close_delay=stream_close_delay,
+                dynamic_upstreams=dynamic_upstreams,
+                verbose_logs=verbose_logs,
             )
         )
         return self

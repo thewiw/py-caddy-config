@@ -14,6 +14,24 @@ from caddyconfig import (
     MatchCriteria,
     RawHandler,
     handler_from_dict,
+    HeaderConfig,
+    HeaderOps,
+    RespHeaderOps,
+    HeaderReplacement,
+    HeaderRequire,
+    RewriteConfig,
+    QueryRewrite,
+    UriSubstring,
+    PathRegexp,
+    QueryRename,
+    QuerySet,
+    QueryReplace,
+    HealthChecks,
+    ActiveHealthCheck,
+    PassiveHealthCheck,
+    LoadBalancing,
+    HandleResponse,
+    HandleResponseMatch,
 )
 
 
@@ -73,6 +91,19 @@ class TestUpstreamAddress:
     ])
     def test_valid_dials(self, dial: str):
         assert UpstreamAddress(dial=dial).dial == dial
+
+    def test_max_requests_included(self):
+        u = UpstreamAddress(dial="10.0.0.1:80", max_requests=100)
+        d = u.to_dict()
+        assert d["dial"] == "10.0.0.1:80"
+        assert d["max_requests"] == 100
+
+    def test_max_requests_omitted_when_none(self):
+        assert "max_requests" not in UpstreamAddress(dial="10.0.0.1:80").to_dict()
+
+    def test_max_requests_roundtrip(self):
+        u = UpstreamAddress(dial="10.0.0.1:80", max_requests=50)
+        assert UpstreamAddress.from_dict(u.to_dict()).to_dict() == u.to_dict()
 
     @pytest.mark.parametrize("dial", [
         "no-port",
@@ -146,6 +177,313 @@ class TestReverseProxyHandler:
     def test_handler_from_dict_dispatch(self):
         h = handler_from_dict({"handler": "reverse_proxy", "upstreams": [{"dial": "a:1"}]})
         assert isinstance(h, ReverseProxyHandler)
+
+    def test_all_new_fields_roundtrip(self):
+        h = ReverseProxyHandler(
+            upstreams=["10.0.0.1:80"],
+            headers=HeaderConfig(
+                request=HeaderOps(
+                    set={"X-Real-IP": ["{remote_host}"]},
+                    delete=["X-Internal"],
+                ),
+                response=RespHeaderOps(
+                    set={"Cache-Control": ["no-cache"]},
+                    deferred=True,
+                    require=HeaderRequire(status_code=[200, 201]),
+                ),
+            ),
+            transport={"protocol": "http"},
+            circuit_breaker={"threshold": 5},
+            health_checks=HealthChecks(
+                active=ActiveHealthCheck(
+                    path="/health",
+                    method="GET",
+                    interval=30,
+                    timeout=5,
+                ),
+                passive=PassiveHealthCheck(
+                    fail_duration=30,
+                    max_fails=3,
+                ),
+            ),
+            load_balancing=LoadBalancing(
+                selection_policy={"name": "least_conn"},
+                retries=3,
+            ),
+            rewrite=RewriteConfig(
+                method="GET",
+                strip_path_prefix="/api",
+                uri_substring=[UriSubstring(find="/old", replace="/new", limit=1)],
+            ),
+            flush_interval=100,
+            trusted_proxies=["10.0.0.0/8"],
+            request_buffers=4096,
+            response_buffers=4096,
+            stream_timeout=300,
+            stream_close_delay=30,
+            verbose_logs=True,
+        )
+        d = h.to_dict()
+        restored = ReverseProxyHandler.from_dict(d)
+        assert restored.to_dict() == d
+
+    def test_dict_headers_still_work(self):
+        """Passing a raw dict for headers must still be accepted."""
+        h = ReverseProxyHandler(
+            upstreams=["a:1"],
+            headers={"request": {"set": {"X": ["Y"]}}},
+        )
+        d = h.to_dict()
+        assert "headers" in d
+        assert d["headers"]["request"]["set"]["X"] == ["Y"]
+
+    def test_empty_headers_omitted(self):
+        h = ReverseProxyHandler(upstreams=["a:1"], headers=HeaderConfig())
+        assert "headers" not in h.to_dict()
+
+    def test_empty_health_checks_omitted(self):
+        h = ReverseProxyHandler(upstreams=["a:1"], health_checks=HealthChecks())
+        assert "health_checks" not in h.to_dict()
+
+    def test_empty_load_balancing_omitted(self):
+        h = ReverseProxyHandler(upstreams=["a:1"], load_balancing=LoadBalancing())
+        assert "load_balancing" not in h.to_dict()
+
+    def test_empty_rewrite_omitted(self):
+        h = ReverseProxyHandler(upstreams=["a:1"], rewrite=RewriteConfig())
+        assert "rewrite" not in h.to_dict()
+
+
+# ---------------------------------------------------------------------------
+# Header models
+# ---------------------------------------------------------------------------
+
+class TestHeaderConfig:
+    def test_request_set(self):
+        h = HeaderConfig(
+            request=HeaderOps(set={"Host": ["{upstream_hostport}"]})
+        )
+        d = h.to_dict()
+        assert d["request"]["set"]["Host"] == ["{upstream_hostport}"]
+
+    def test_request_add_delete_replace(self):
+        h = HeaderConfig(
+            request=HeaderOps(
+                add={"X-Proxy": ["Caddy"]},
+                delete=["X-Internal"],
+                replace={
+                    "X-Foo": [HeaderReplacement(search="old", replace="new")]
+                },
+            )
+        )
+        d = h.to_dict()
+        assert d["request"]["add"]["X-Proxy"] == ["Caddy"]
+        assert d["request"]["delete"] == ["X-Internal"]
+        assert d["request"]["replace"]["X-Foo"][0]["search"] == "old"
+
+    def test_response_deferred_require(self):
+        h = HeaderConfig(
+            response=RespHeaderOps(
+                set={"X-Frame-Options": ["DENY"]},
+                deferred=True,
+                require=HeaderRequire(status_code=[200]),
+            )
+        )
+        d = h.to_dict()
+        assert d["response"]["set"]["X-Frame-Options"] == ["DENY"]
+        assert d["response"]["deferred"] is True
+        assert d["response"]["require"]["status_code"] == [200]
+
+    def test_empty_request_response_omitted(self):
+        assert HeaderConfig().to_dict() == {}
+
+    def test_header_config_roundtrip(self):
+        h = HeaderConfig(
+            request=HeaderOps(
+                set={"X": ["Y"]},
+                add={"A": ["B"]},
+                delete=["D"],
+            ),
+            response=RespHeaderOps(
+                set={"R": ["S"]},
+                deferred=True,
+            ),
+        )
+        assert HeaderConfig.from_dict(h.to_dict()).to_dict() == h.to_dict()
+
+
+# ---------------------------------------------------------------------------
+# Rewrite models
+# ---------------------------------------------------------------------------
+
+class TestRewriteConfig:
+    def test_method_and_uri(self):
+        r = RewriteConfig(method="POST", uri="/api/v1")
+        d = r.to_dict()
+        assert d["method"] == "POST"
+        assert d["uri"] == "/api/v1"
+
+    def test_strip_prefix_suffix(self):
+        r = RewriteConfig(strip_path_prefix="/api", strip_path_suffix=".html")
+        d = r.to_dict()
+        assert d["strip_path_prefix"] == "/api"
+        assert d["strip_path_suffix"] == ".html"
+
+    def test_uri_substring(self):
+        r = RewriteConfig(
+            uri_substring=[UriSubstring(find="/old", replace="/new", limit=2)]
+        )
+        d = r.to_dict()
+        assert d["uri_substring"][0]["find"] == "/old"
+        assert d["uri_substring"][0]["limit"] == 2
+
+    def test_path_regexp(self):
+        r = RewriteConfig(
+            path_regexp=[PathRegexp(find=r"^/v1/(.*)$", replace="/v2/\\1")]
+        )
+        d = r.to_dict()
+        assert d["path_regexp"][0]["find"] == r"^/v1/(.*)$"
+
+    def test_query_rewrite(self):
+        r = RewriteConfig(
+            query=QueryRewrite(
+                rename=[QueryRename(key="old_key", val="new_key")],
+                set=[QuerySet(key="foo", val="bar")],
+                add=[QuerySet(key="a", val="b")],
+                replace=[QueryReplace(key="q", search="x", replace="y")],
+                delete=["remove_me"],
+            )
+        )
+        d = r.to_dict()
+        assert d["query"]["rename"][0]["key"] == "old_key"
+        assert d["query"]["set"][0]["val"] == "bar"
+        assert d["query"]["delete"] == ["remove_me"]
+
+    def test_rewrite_roundtrip(self):
+        r = RewriteConfig(
+            method="GET",
+            strip_path_prefix="/api",
+            uri_substring=[UriSubstring(find="/a", replace="/b")],
+            query=QueryRewrite(
+                set=[QuerySet(key="x", val="y")],
+            ),
+        )
+        assert RewriteConfig.from_dict(r.to_dict()).to_dict() == r.to_dict()
+
+
+# ---------------------------------------------------------------------------
+# Health Checks
+# ---------------------------------------------------------------------------
+
+class TestHealthChecks:
+    def test_active_health_check(self):
+        hc = ActiveHealthCheck(
+            path="/health",
+            method="GET",
+            interval=30,
+            timeout=5,
+            passes=2,
+            fails=3,
+        )
+        d = hc.to_dict()
+        assert d["path"] == "/health"
+        assert d["method"] == "GET"
+        assert d["interval"] == 30
+        assert d["passes"] == 2
+
+    def test_passive_health_check(self):
+        hc = PassiveHealthCheck(
+            fail_duration=30,
+            max_fails=3,
+            unhealthy_status=[500, 502, 503],
+        )
+        d = hc.to_dict()
+        assert d["fail_duration"] == 30
+        assert d["unhealthy_status"] == [500, 502, 503]
+
+    def test_health_checks_roundtrip(self):
+        h = HealthChecks(
+            active=ActiveHealthCheck(path="/health", method="GET"),
+            passive=PassiveHealthCheck(max_fails=5),
+        )
+        assert HealthChecks.from_dict(h.to_dict()).to_dict() == h.to_dict()
+
+    def test_empty_health_checks_omitted(self):
+        assert HealthChecks().to_dict() == {}
+
+
+# ---------------------------------------------------------------------------
+# Load Balancing
+# ---------------------------------------------------------------------------
+
+class TestLoadBalancing:
+    def test_selection_policy_and_retries(self):
+        lb = LoadBalancing(
+            selection_policy={"name": "least_conn"},
+            retries=3,
+            try_duration=5,
+        )
+        d = lb.to_dict()
+        assert d["selection_policy"] == {"name": "least_conn"}
+        assert d["retries"] == 3
+        assert d["try_duration"] == 5
+
+    def test_empty_load_balancing_omitted(self):
+        assert LoadBalancing().to_dict() == {}
+
+    def test_roundtrip(self):
+        lb = LoadBalancing(retries=3, try_interval=1)
+        assert LoadBalancing.from_dict(lb.to_dict()).to_dict() == lb.to_dict()
+
+
+# ---------------------------------------------------------------------------
+# Handle Response
+# ---------------------------------------------------------------------------
+
+class TestHandleResponse:
+    def test_match_status_code(self):
+        m = HandleResponseMatch(status_code=[404, 500])
+        d = m.to_dict()
+        assert d["status_code"] == [404, 500]
+
+    def test_match_headers(self):
+        m = HandleResponseMatch(headers={"Content-Type": ["text/html"]})
+        d = m.to_dict()
+        assert d["headers"]["Content-Type"] == ["text/html"]
+
+    def test_empty_match_omitted(self):
+        assert HandleResponseMatch().to_dict() == {}
+
+    def test_handle_response_with_routes(self):
+        hr = HandleResponse(
+            match=HandleResponseMatch(status_code=[404]),
+            status_code="200",
+            routes=[
+                Route(
+                    handle=[StaticResponseHandler(status_code=200, body="fallback")],
+                )
+            ],
+        )
+        d = hr.to_dict()
+        assert d["match"]["status_code"] == [404]
+        assert d["status_code"] == "200"
+        assert len(d["routes"]) == 1
+        assert d["routes"][0]["handle"][0]["handler"] == "static_response"
+
+    def test_handle_response_empty_match_omitted(self):
+        hr = HandleResponse(status_code="418")
+        d = hr.to_dict()
+        assert "match" not in d
+        assert d["status_code"] == "418"
+
+    def test_handle_response_roundtrip(self):
+        hr = HandleResponse(
+            match=HandleResponseMatch(status_code=[500]),
+            routes=[
+                Route(handle=[StaticResponseHandler(status_code=200, body="ok")]),
+            ],
+        )
+        assert HandleResponse.from_dict(hr.to_dict()).to_dict() == hr.to_dict()
 
 
 # ---------------------------------------------------------------------------

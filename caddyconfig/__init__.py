@@ -28,7 +28,28 @@ from .match import MatchCriteria
 # Handlers
 from .handlers import HandlerBase, RawHandler, handler_from_dict
 from .handlers.file_server import FileServerHandler
-from .handlers.reverse_proxy import ReverseProxyHandler, UpstreamAddress
+from .handlers.reverse_proxy import (
+    ReverseProxyHandler,
+    UpstreamAddress,
+    HeaderConfig,
+    HeaderOps,
+    RespHeaderOps,
+    HeaderReplacement,
+    HeaderRequire,
+    RewriteConfig,
+    QueryRewrite,
+    UriSubstring,
+    PathRegexp,
+    QueryRename,
+    QuerySet,
+    QueryReplace,
+    HealthChecks,
+    ActiveHealthCheck,
+    PassiveHealthCheck,
+    LoadBalancing,
+    HandleResponse,
+    HandleResponseMatch,
+)
 from .handlers.static_response import StaticResponseHandler
 from .handlers.authentication import AuthenticationHandler, HttpBasicCredential
 from .handlers.subroute import SubrouteHandler
@@ -51,6 +72,14 @@ __all__ = [
     "HandlerBase", "RawHandler", "handler_from_dict",
     "FileServerHandler",
     "ReverseProxyHandler", "UpstreamAddress",
+    "HeaderConfig", "HeaderOps", "RespHeaderOps",
+    "HeaderReplacement", "HeaderRequire",
+    "RewriteConfig", "QueryRewrite",
+    "UriSubstring", "PathRegexp",
+    "QueryRename", "QuerySet", "QueryReplace",
+    "HealthChecks", "ActiveHealthCheck", "PassiveHealthCheck",
+    "LoadBalancing",
+    "HandleResponse", "HandleResponseMatch",
     "StaticResponseHandler",
     "AuthenticationHandler", "HttpBasicCredential",
     "SubrouteHandler",
