@@ -39,6 +39,7 @@ class MatchCriteria(CaddyModel):
     path_regexp: Optional[dict[str, Any]] = None
     header: Optional[dict[str, list[str]]] = None
     header_regexp: Optional[dict[str, Any]] = None
+    query: Optional[dict[str, list[str]]] = None
     not_: Optional[list["MatchCriteria"]] = Field(None, alias="not", serialization_alias="not") # JSON alias: "not" is a Python reserved word
 
     # ------------------------------------------------------------------
@@ -72,6 +73,15 @@ class MatchCriteria(CaddyModel):
                     raise ValueError("Header keys cannot be empty")
         return v
 
+    @field_validator("query", mode="before")
+    @classmethod
+    def query_non_empty_keys(cls, v: Any) -> Any:
+        if v is not None:
+            for k in v:
+                if not k.strip():
+                    raise ValueError("Query keys cannot be empty")
+        return v
+
     # ------------------------------------------------------------------
     # Exact matching (for find / upsert / remove)
     # ------------------------------------------------------------------
@@ -98,6 +108,9 @@ class MatchCriteria(CaddyModel):
         if criteria.header_regexp is not None:
             if self.header_regexp != criteria.header_regexp:
                 return False
+        if criteria.query is not None:
+            if self.query != criteria.query:
+                return False
         if criteria.not_ is not None:
             self_not = self.not_ or []
             if len(self_not) != len(criteria.not_):
@@ -123,6 +136,8 @@ class MatchCriteria(CaddyModel):
             d["header"] = {k: list(v) for k, v in self.header.items()}
         if self.header_regexp is not None:
             d["header_regexp"] = dict(self.header_regexp)
+        if self.query is not None:
+            d["query"] = {k: list(v) for k, v in self.query.items()}
         if self.not_:
             # Use the serialization_alias from the Field definition
             alias = self.__class__.model_fields["not_"].serialization_alias or "not"

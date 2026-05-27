@@ -55,6 +55,18 @@ class TestMatchCriteriaValidation:
         m = MatchCriteria(header_regexp={"name": "r1", "field": "X-Foo", "pattern": "^val"})
         assert m.to_dict()["header_regexp"]["field"] == "X-Foo"
 
+    def test_query_valid(self):
+        m = MatchCriteria(query={"key": ["value"], "topic": ["api"]})
+        assert m.to_dict()["query"] == {"key": ["value"], "topic": ["api"]}
+
+    def test_query_empty_key_raises(self):
+        with pytest.raises(ValidationError, match="not be empty"):
+            MatchCriteria(query={"": ["value"]})
+
+    def test_query_blank_key_raises(self):
+        with pytest.raises(ValidationError, match="not be empty"):
+            MatchCriteria(query={"   ": ["value"]})
+
     def test_not_matcher(self):
         inner = MatchCriteria(path=["/health"])
         m = MatchCriteria(not_=[inner])
@@ -80,11 +92,16 @@ class TestMatchCriteriaSerialization:
         assert m.not_ is not None
         assert m.not_[0].path == ["/skip"]
 
+    def test_from_dict_query(self):
+        m = MatchCriteria.from_dict({"query": {"key": ["value"]}})
+        assert m.query == {"key": ["value"]}
+
     def test_roundtrip_full(self):
         m = MatchCriteria(
             host=["foo.com"],
             path=["/api"],
             header={"X-Key": ["v"]},
+            query={"key": ["value"]},
             not_=[MatchCriteria(path=["/skip"])],
         )
         m2 = MatchCriteria.from_dict(m.to_dict())
@@ -140,3 +157,15 @@ class TestMatchCriteriaMatchesExactly:
     def test_header_mismatch(self):
         route = MatchCriteria(header={"X-A": ["v1"]})
         assert route.matches_exactly(MatchCriteria(header={"X-A": ["v2"]})) is False
+
+    def test_query_exact(self):
+        route = MatchCriteria(query={"key": ["value"]})
+        assert route.matches_exactly(MatchCriteria(query={"key": ["value"]})) is True
+
+    def test_query_mismatch(self):
+        route = MatchCriteria(query={"key": ["value"]})
+        assert route.matches_exactly(MatchCriteria(query={"key": ["other"]})) is False
+
+    def test_none_criteria_ignores_query(self):
+        route = MatchCriteria(host=["foo.com"], query={"key": ["value"]})
+        assert route.matches_exactly(MatchCriteria(host=["foo.com"])) is True
