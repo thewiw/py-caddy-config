@@ -86,11 +86,11 @@ class TestLogSink:
 
 class TestLogEntry:
     def test_level_only(self):
-        e = LogEntry(name="default", level="warn")
-        assert e.to_dict() == {"level": "warn"}
+        e = LogEntry(name="default", level="WARN")
+        assert e.to_dict() == {"level": "WARN"}
 
     def test_writer_included(self):
-        e = LogEntry(name="access", level="info", writer="stdout")
+        e = LogEntry(name="access", level="INFO", writer="stdout")
         assert e.to_dict()["writer"] == {"output": "stdout"}
 
     def test_invalid_level_raises(self):
@@ -102,12 +102,12 @@ class TestLogEntry:
             LogEntry(name="x", writer="file")  # type: ignore[arg-type]
 
     def test_name_excluded_from_dict(self):
-        assert "name" not in LogEntry(name="default", level="info").to_dict()
+        assert "name" not in LogEntry(name="default", level="INFO").to_dict()
 
     def test_roundtrip(self):
-        e = LogEntry(name="access", level="debug", writer="stderr")
+        e = LogEntry(name="access", level="DEBUG", writer="stderr")
         e2 = LogEntry.from_dict("access", e.to_dict())
-        assert e2.level == "debug"
+        assert e2.level == "DEBUG"
         assert e2.writer == "stderr"
         assert e2.name == "access"
 
@@ -126,19 +126,19 @@ class TestLogging:
 
     def test_set_get_log(self):
         lg = Logging()
-        e = LogEntry(name="app", level="info")
+        e = LogEntry(name="app", level="INFO")
         lg.set_log(e)
         assert lg.get_log("app") is e
 
     def test_set_log_replaces(self):
         lg = Logging()
-        lg.set_log(LogEntry(name="app", level="info"))
-        lg.set_log(LogEntry(name="app", level="error"))
-        assert lg.logs["app"].level == "error"
+        lg.set_log(LogEntry(name="app", level="INFO"))
+        lg.set_log(LogEntry(name="app", level="ERROR"))
+        assert lg.logs["app"].level == "ERROR"
 
     def test_remove_log_found(self):
         lg = Logging()
-        lg.set_log(LogEntry(name="app", level="info"))
+        lg.set_log(LogEntry(name="app", level="INFO"))
         assert lg.remove_log("app") is True
         assert lg.get_log("app") is None
 
@@ -148,7 +148,7 @@ class TestLogging:
     def test_roundtrip(self):
         lg = Logging(
             sink=LogSink(writer="stderr"),
-            logs={"default": LogEntry(name="default", level="warn")},
+            logs={"default": LogEntry(name="default", level="WARN")},
         )
         lg2 = Logging.from_dict(lg.to_dict())
         assert lg2.to_dict() == lg.to_dict()

@@ -1,6 +1,6 @@
 [project]
 name = "caddyconfig"
-version = "0.1.4"
+version = "0.1.5"
 description = "Caddy JSON configuration manipulation (Pydantic v2 + fluent builder)"
 readme = "README.md"
 license = "Apache-2.0"

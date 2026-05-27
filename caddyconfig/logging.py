@@ -12,7 +12,7 @@ from pydantic import Field
 from .base import CaddyModel
 
 WriterOutput = Literal["stderr", "stdout"]
-LogLevel = Literal["debug", "info", "warn", "error", "panic", "fatal"]
+LogLevel = Literal["DEBUG", "INFO", "WARN", "ERROR", "PANIC", "FATAL"]
 
 
 class LogSink(CaddyModel):

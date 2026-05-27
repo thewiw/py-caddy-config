@@ -23,7 +23,7 @@ from caddyconfig.builder import CaddyConfigBuilder
 config = (
     CaddyConfigBuilder()
     .admin(listen="localhost:2019")
-    .logging(writer="stderr", level="info")
+    .logging(writer="stderr", level="INFO")
     .server("main", listen=[":443", ":80"])
         .route()
             .match(host=["acme.com"])
@@ -53,7 +53,7 @@ config = CaddyConfig(
     admin=Admin(listen="localhost:2019"),
     logging=Logging(
         sink=LogSink(writer="stderr"),
-        logs={"default": LogEntry(name="default", level="info")},
+        logs={"default": LogEntry(name="default", level="INFO")},
     ),
     apps=Apps(
         http=HttpApp(

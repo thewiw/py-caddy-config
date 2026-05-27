@@ -14,7 +14,7 @@ Full example
     config = (
         CaddyConfigBuilder()
         .admin(listen="localhost:2019")
-        .logging(writer="stderr", level="info")
+        .logging(writer="stderr", level="INFO")
         .server("main", listen=[":443", ":80"])
             .route()
                 .match(host=["acme.com"])
@@ -420,7 +420,7 @@ class CaddyConfigBuilder:
         config = (
             CaddyConfigBuilder()
             .admin(listen="localhost:2019")
-            .logging(writer="stderr", level="info")
+            .logging(writer="stderr", level="INFO")
             .server("main", listen=[":443", ":80"])
                 .route()
                     .match(host=["foo.com"])
@@ -464,7 +464,7 @@ class CaddyConfigBuilder:
     def logging(
         self,
         writer: str = "stderr",
-        level: str = "info",
+        level: str = "INFO",
         *,
         logger_name: str = "default",
         extra_logs: Optional[dict[str, dict[str, str]]] = None,

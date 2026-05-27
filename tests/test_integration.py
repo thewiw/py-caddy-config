@@ -40,7 +40,7 @@ def make_base_config() -> CaddyConfig:
         admin=Admin(listen="localhost:2019"),
         logging=Logging(
             sink=LogSink(writer="stderr"),
-            logs={"default": LogEntry(name="default", level="info")},
+            logs={"default": LogEntry(name="default", level="INFO")},
         ),
         apps=Apps(
             http=HttpApp(
@@ -222,7 +222,7 @@ class TestFullJsonRoundtrip:
             "admin": {"listen": "localhost:2019"},
             "logging": {
                 "sink": {"writer": {"output": "stderr"}},
-                "logs": {"default": {"level": "info"}},
+                "logs": {"default": {"level": "INFO"}},
             },
             "apps": {
                 "http": {
@@ -263,7 +263,7 @@ class TestBuilderIntegration:
         config = (
             CaddyConfigBuilder()
             .admin(listen="localhost:2019")
-            .logging(writer="stderr", level="info")
+            .logging(writer="stderr", level="INFO")
             .server("main", listen=[":443", ":80"])
                 .route().match(host=["acme.com"]).handle_static(200, body="Welcome").done()
                 .route().match(path=["/test"]).handle_reverse_proxy("192.168.0.123:8042").done()
@@ -280,7 +280,7 @@ class TestBuilderIntegration:
         config = (
             CaddyConfigBuilder()
             .admin(listen="localhost:2019")
-            .logging(writer="stderr", level="info")
+            .logging(writer="stderr", level="INFO")
             .server("main", listen=[":443", ":80"])
                 .route().match(host=["acme.com"]).handle_reverse_proxy("192.168.0.123:8042").done()
             .done()

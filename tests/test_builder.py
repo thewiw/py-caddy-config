@@ -182,19 +182,19 @@ class TestCaddyConfigBuilder:
         assert config.admin.origins == ["http://a.com"]  # type: ignore[union-attr]
 
     def test_logging(self):
-        config = CaddyConfigBuilder().logging(writer="stderr", level="warn").build()
+        config = CaddyConfigBuilder().logging(writer="stderr", level="WARN").build()
         assert config.logging.sink.writer == "stderr"  # type: ignore[union-attr]
-        assert config.logging.logs["default"].level == "warn"  # type: ignore[union-attr]
+        assert config.logging.logs["default"].level == "WARN"  # type: ignore[union-attr]
 
     def test_logging_stdout(self):
         assert CaddyConfigBuilder().logging(writer="stdout").build().logging.sink.writer == "stdout"  # type: ignore[union-attr]
 
     def test_logging_extra_logs(self):
         config = CaddyConfigBuilder().logging(
-            level="info",
-            extra_logs={"access": {"level": "debug", "writer": "stdout"}},
+            level="INFO",
+            extra_logs={"access": {"level": "DEBUG", "writer": "stdout"}},
         ).build()
-        assert config.logging.logs["access"].level == "debug"  # type: ignore[union-attr]
+        assert config.logging.logs["access"].level == "DEBUG"  # type: ignore[union-attr]
 
     def test_single_server(self):
         config = (
@@ -224,7 +224,7 @@ class TestCaddyConfigBuilder:
         config = (
             CaddyConfigBuilder()
             .admin(listen="localhost:2019")
-            .logging(writer="stderr", level="info")
+            .logging(writer="stderr", level="INFO")
             .server("main", listen=[":443", ":80"])
                 .route().match(host=["foo.com"]).handle_reverse_proxy("10.0.0.1:8080").done()
             .done()
@@ -252,7 +252,7 @@ class TestCaddyConfigBuilder:
             admin=Admin(listen="localhost:2019"),
             logging=Logging(
                 sink=LogSink(writer="stderr"),
-                logs={"default": LogEntry(name="default", level="info")},
+                logs={"default": LogEntry(name="default", level="INFO")},
             ),
             apps=Apps(
                 http=HttpApp(
@@ -275,7 +275,7 @@ class TestCaddyConfigBuilder:
         via_builder = (
             CaddyConfigBuilder()
             .admin(listen="localhost:2019")
-            .logging(writer="stderr", level="info")
+            .logging(writer="stderr", level="INFO")
             .server("main", listen=[":443", ":80"])
                 .route().match(host=["foo.com"]).handle_reverse_proxy("10.0.0.1:80").done()
             .done()
